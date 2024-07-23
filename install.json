@@ -1,0 +1,161 @@
+{
+ "version": "auto-py-to-exe-configuration_v1",
+ "pyinstallerOptions": [
+  {
+   "optionDest": "noconfirm",
+   "value": true
+  },
+  {
+   "optionDest": "filenames",
+   "value": "D:/Document/Document/python/GUIenv/GUI/Proxies/proxies.py"
+  },
+  {
+   "optionDest": "onefile",
+   "value": true
+  },
+  {
+   "optionDest": "console",
+   "value": false
+  },
+  {
+   "optionDest": "icon_file",
+   "value": "D:/Document/Document/python/GUIenv/GUI/Proxies/src/assets/Static_Residential_Proxies_64.png"
+  },
+  {
+   "optionDest": "clean_build",
+   "value": false
+  },
+  {
+   "optionDest": "strip",
+   "value": false
+  },
+  {
+   "optionDest": "noupx",
+   "value": false
+  },
+  {
+   "optionDest": "disable_windowed_traceback",
+   "value": false
+  },
+  {
+   "optionDest": "uac_admin",
+   "value": false
+  },
+  {
+   "optionDest": "uac_uiaccess",
+   "value": false
+  },
+  {
+   "optionDest": "argv_emulation",
+   "value": false
+  },
+  {
+   "optionDest": "bootloader_ignore_signals",
+   "value": false
+  },
+  {
+   "optionDest": "datas",
+   "value": "D:/Document/Document/python/GUIenv/GUI/Proxies/src;src/"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "requests"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "json"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "logging"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "sqlite3"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "ttkbootstrap"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "ttkbootstrap.dialogs"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "ttkbootstrap.tableview"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "ttkbootstrap.constants"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "tkinter.scrolledtext"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "pathlib"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "threading"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "chardet"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "traceback"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "bs4"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "lxml"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "concurrent.futures"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "PIL"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "tkinter"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "socket"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "ctypes"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "ctypes"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "ttkbootstrap.style"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "logging.config"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "appdirs"
+  }
+ ],
+ "nonPyinstallerOptions": {
+  "increaseRecursionLimit": true,
+  "manualArguments": ""
+ }
+}
