@@ -3,4 +3,4 @@
 
 ##界面
 
-![image](https://github.com/singebogo/Proxies/blob/master/img/gui.png)
+[![image](https://github.com/singebogo/Proxies/blob/master/img/gui.png)](https://github.com/singebogo/Proxies/blob/master/img/gui.png)
