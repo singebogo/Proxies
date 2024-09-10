@@ -27,7 +27,7 @@ class App(ttk.Window):
         img_data = pic_transform(self.assets_path / 'Static_Residential_Proxies_64.png')
         self.title('ip proxies-singebogo@163.com')
         self.tk.call("wm", "iconphoto", self._w, ttk.PhotoImage(data=img_data))
-        self.resizable(False, False)
+        # self.resizable(False, False)
 
         # 告诉操作系统使用程序自身的dpi适配
         ctypes.windll.shcore.SetProcessDpiAwareness(1)

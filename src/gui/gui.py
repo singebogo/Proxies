@@ -1,6 +1,10 @@
 import logging
+import os.path
 from datetime import datetime
 from random import choices
+import sched, time
+from tkinter.ttk import Panedwindow
+from ttkbootstrap.constants import *
 import ttkbootstrap as ttk
 from tkinter.filedialog import askdirectory
 from ttkbootstrap.dialogs import Messagebox
@@ -8,16 +12,18 @@ from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.constants import *
 from tkinter.scrolledtext import ScrolledText
 from pathlib import Path
-from threading import Thread
+from threading import *
+from ttkbootstrap.window import Toplevel
+from src.utils.env import home
 
 from .collapsingFrame import CollapsingFrame
 from ..utils.git_player import playGif
 from ..utils.ip_check import check_proxy, domestic, abroad, origin_ip, host_ip
 from ..utils.ips import Downloader
-from ..utils.proxy_reg import queryProxyEnable, queryProxyOverride, queryProxyServer, enable as proxyEnable,\
-    setProxy,  disable as proxyDisable
+from ..utils.proxy_reg import queryProxyEnable, queryProxyOverride, queryProxyServer, enable as proxyEnable, \
+    setProxy, disable as proxyDisable
 from ..utils.slite import select_sql, select_count_sql, select_count_today_sql, select_lastest_sql, \
-    select_speed_today_sql
+    select_speed_today_sql, dele
 from PIL import Image, ImageTk
 
 PATH = Path(__file__).parent.parent / 'assets'
@@ -30,6 +36,17 @@ class Proxies(ttk.Frame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.pack(fill=BOTH, expand=YES)
+        self.lsched = None
+        self.count = 5  # 多少分钟循环一次抓取数据
+        self.label = 0 # 游标
+        self.log_app = None
+
+        self.handlers = logger.handlers
+        self.log_file = os.path.join(home(), 'Proxies.log')
+        for handle in self.handlers:
+            if type('handle') == 'FileHandler':
+                self.log_file = handle.baseFilename
+                break
 
         image_files = {
             'properties-dark': 'icons8_settings_24px.png',
@@ -68,6 +85,46 @@ class Proxies(ttk.Frame):
         self.init_button_bar()
         self.init_left_panel()
         self.init_right_panel()
+
+        self.event = Event()
+        self.downloadId = Thread(target=self.download_flow, daemon=True)
+        self.downloadId.start()
+
+        self.log_event = Event()
+        self.log_Id = Thread(target=self.refresh_logs_flow, daemon=True)
+        self.log_Id.start()
+
+    def countdown(self, c):
+        # c 分钟
+        c = int(c) * 60
+        while self.event.is_set() and c:
+            m, s = divmod(c, 60)
+            timer = '{:02d}:{:02d}'.format(m, s)
+            self.grap.configure(image='grap_32_dark', text='自动抓取中.....倒计时：{}'.format(timer), )
+            time.sleep(1)
+            c -= 1
+
+    def download_flow(self):
+        self.event.wait()
+        while self.event.is_set():
+            # event clear 后 还在运行
+            time.sleep(1)
+            Downloader().run()
+            self.countdown(self.count)
+
+    def refresh_logs_flow(self):
+        self.log_event.wait()
+        while self.log_event.is_set():
+            # event clear 后 还在运行
+            time.sleep(1)
+            # 重新加载日志
+            fd = open(self.log_file, 'r',encoding='UTF-8')  # 获得一个句柄
+            fd.seek(self.label, 0)  # 把文件读取指针移动到之前记录的位置
+            self.s_text.insert('end', fd.readlines())  # 接着上次的位置继续向下读取
+            self.s_text.see(ttk.END)
+            fd.close()
+            if not self.log_app:
+                self.log_event.clear()
 
     def init_button_bar(self):
         # buttonbar
@@ -123,6 +180,72 @@ class Proxies(ttk.Frame):
         )
         btn.pack(side=LEFT, ipadx=5, ipady=5, padx=0, pady=1)
 
+        btn = ttk.Button(
+            master=buttonbar,
+            text='清理缓存',
+            image='properties-light',
+            compound=LEFT,
+            command=self._clearCache
+        )
+        btn.pack(side=LEFT, ipadx=5, ipady=5, padx=0, pady=1)
+
+        btn = ttk.Button(
+            master=buttonbar,
+            text='日志',
+            image='properties-light',
+            compound=LEFT,
+            command=self._log
+        )
+        btn.pack(side=LEFT, ipadx=5, ipady=5, padx=0, pady=1)
+
+    def _log(self):
+        self.log_app = Toplevel(title="logs view", size=(950, 600), toolwindow=False)
+        self.log_app.place_window_center()
+        self.log_app.position_center()
+
+        # 工具栏
+        buttonbar = ttk.Frame(self.log_app, style='primary.TFrame')
+        buttonbar.pack(fill=BOTH, pady=1, side=TOP)
+
+        btn = ttk.Button(
+            master=buttonbar,
+            text='刷新',
+            image='refresh',
+            compound=LEFT,
+            command=self.refresh_logs
+        )
+        btn.pack(side=LEFT, ipadx=5, ipady=5, padx=0, pady=1)
+
+        # 日志区域
+        logs_panel = ttk.Frame(self.log_app, style='bg.TFrame', borderwidth=1)
+        logs_panel.pack(fill=BOTH, pady=1, side=TOP, expand=YES)
+        style = ttk.Style()
+        self.s_text = ttk.ScrolledText(logs_panel,
+                                  highlightcolor=style.colors.primary,
+                                  highlightbackground=style.colors.border,
+                                  highlightthickness=1)
+        self.s_text.pack(fill=BOTH, expand=True)
+        self.log_app.mainloop()
+
+        t1 = Thread(target=self.init_logs, args=())
+        t1.daemon = True  # 设置p1为守护进程
+        t1.start()
+
+    def init_logs(self):
+        # 首次读取文件
+        fd = open(self.log_file, 'r', encoding='UTF-8')  # 获得一个句柄
+        self.s_text.insert('end', fd.readlines())  # 接着上次的位置继续向下读取
+        self.s_text.see(ttk.END)
+        self.label = fd.tell()  # 记录读取到的位置
+        fd.close()  # 关闭文件
+
+    def refresh_logs(self):
+        self.log_event.set()
+
+    def _clearCache(self):
+        dele()
+        self.reload()
+
     def refresh(self):
         # 1、当前状态
         enable = queryProxyEnable()
@@ -164,14 +287,15 @@ class Proxies(ttk.Frame):
         self.fast_speed()
 
     def selected(self):
+        # flag：1 抓取：定时器 开启--》开启一次性守护线程--》多个守护线程--》执行完成
+        #       0 停止抓取 定时器 停止 (最近一次抓取行为自动结束)
         state = self.grap.state()
         if "selected" in state:
             self.grap.configure(image='grap_32_dark', text='自动抓取中.....', )
-            self.d = Downloader()
-            self.d.run()
+            self.event.set()
         else:
-            self.grap.configure(image='grap_32_light', text='自动抓取', )
-            self.d.stop()
+            self.grap.configure(image='grap_32_light', text='停止抓取', )
+            self.event.clear()
 
     def proxy(self):
         state = self.proxy_btn.state()
@@ -284,9 +408,9 @@ class Proxies(ttk.Frame):
         # 当前今日最快一条
         today = select_speed_today_sql()
         if not today:
-            ip, port, last_check, speed, local, domestic, abroad = "","","","","","",""
+            ip, port, last_check, speed, local, domestic, abroad, type = "", "", "", "", "", "", "", ""
         else:
-            ip, port, last_check, speed, local, domestic, abroad = today
+            ip, port, last_check, speed, local, domestic, abroad, type = today
         self.ip['ip'] = ip
         self.ip['port'] = port
         self.ip['last_check'] = last_check
@@ -442,7 +566,6 @@ class Proxies(ttk.Frame):
         # t1.start()
         pass
 
-
     def init_other(self, left_panel):
         imgpath = Path(__file__).parent.parent / 'assets' / "earth.gif"
         self.gif = playGif(imgpath)
@@ -506,8 +629,8 @@ class Proxies(ttk.Frame):
             self.local_lbl.configure(text="local: " + local)
             self.now_lbl.configure(text='当前可配置代理数据->speed: ' + speed)
 
-            self.domestic_lbl.configure(text='国内代理: ' )
-            self.abroad_lbl.configure(text='国际代理: ' )
+            self.domestic_lbl.configure(text='国内代理: ')
+            self.abroad_lbl.configure(text='国际代理: ')
 
             t1 = Thread(target=self.invaild_proxy, args=(self.ip['ip'], self.ip['port']))
             t1.daemon = True  # 设置p1为守护进程
@@ -535,3 +658,9 @@ class Proxies(ttk.Frame):
 
     def delete(self):  # 删除临时图
         self.gif.close()
+
+    def quit(self):
+        if self.downloadId.is_alive():
+            pass
+        if self.log_Id.is_alive():
+            pass
